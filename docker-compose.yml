@@ -1,0 +1,47 @@
+services:
+  django-prod:
+    image: mdzenos/django-core:1.0
+    container_name: django-prod
+    ports:
+      - '${DJANGO_PORT_PROD:-8000}:8000'
+    environment:
+      - DJANGO_ENV=production
+      - DEBUG=0
+      - PYTHONUNBUFFERED=1
+    restart: unless-stopped
+    command: gunicorn config.wsgi:application --bind 0.0.0.0:8000 --workers 3
+    profiles:
+      - prod
+
+  django-dev:
+    image: mdzenos/django-core:1.0
+    container_name: django-dev
+    working_dir: /app
+    ports:
+      - '${DJANGO_PORT_DEV:-8001}:8000'
+    environment:
+      - DJANGO_ENV=development
+      - DEBUG=1
+      - PYTHONUNBUFFERED=1
+    volumes:
+      - .:/app
+    command: python manage.py runserver 0.0.0.0:8000
+    restart: unless-stopped
+    profiles:
+      - dev
+  db:
+    image: postgres:16
+    environment:
+      POSTGRES_DB: app_db
+      POSTGRES_USER: app_user
+      POSTGRES_PASSWORD: app_pass
+    ports:
+      - '${DB_PORT:-5439}:5432'
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+
+volumes:
+  pgdata:
+# docker compose --profile prod down && docker compose --profile prod up -d
+# docker logs -f django-prod
+# docker rm -f django-prod
