@@ -29,15 +29,17 @@ INSTALLED_APPS = [
 ]
 
 if DJANGO_ENV == 'development':
-    DEFAULT_PERMISSION = AllowAny
+    DEFAULT_PERMISSION = 'rest_framework.permissions.AllowAny'
 else:
-    DEFAULT_PERMISSION = IsAuthenticated
+    DEFAULT_PERMISSION = 'rest_framework.permissions.IsAuthenticated'
 
 REST_FRAMEWORK = {
     'DEFAULT_RENDERER_CLASSES': [
         'rest_framework.renderers.JSONRenderer'
     ],
-    'DEFAULT_PERMISSION_CLASSES': [DEFAULT_PERMISSION],
+    'DEFAULT_PERMISSION_CLASSES': [
+            DEFAULT_PERMISSION,
+    ],
     'DEFAULT_AUTHENTICATION_CLASSES': [
         'rest_framework.authentication.SessionAuthentication',
     ],
