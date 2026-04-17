@@ -2,33 +2,34 @@ services:
   django-prod:
     image: mdzenos/django-core:1.0
     container_name: django-prod
+    env_file:
+      - .env
     ports:
       - '${DJANGO_PORT_PROD:-8000}:8000'
-    environment:
-      - DJANGO_ENV=production
-      - DEBUG=0
-      - PYTHONUNBUFFERED=1
     restart: unless-stopped
     command: gunicorn config.wsgi:application --bind 0.0.0.0:8000 --workers 3
     profiles:
       - prod
+    depends_on:
+      - db
 
   django-dev:
     image: mdzenos/django-core:1.0
     container_name: django-dev
     working_dir: /app
+    env_file:
+      - .env
     ports:
       - '${DJANGO_PORT_DEV:-8001}:8000'
-    environment:
-      - DJANGO_ENV=development
-      - DEBUG=1
-      - PYTHONUNBUFFERED=1
     volumes:
       - .:/app
     command: python manage.py runserver 0.0.0.0:8000
     restart: unless-stopped
     profiles:
       - dev
+    depends_on:
+      - db
+
   db:
     image: postgres:16
     environment:
@@ -36,12 +37,16 @@ services:
       POSTGRES_USER: app_user
       POSTGRES_PASSWORD: app_pass
     ports:
-      - '${DB_PORT:-5439}:5432'
+      - '${DB_PORT:-5439}:5439'
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U app_user"]
+      interval: 5s
+      retries: 5
     volumes:
       - pgdata:/var/lib/postgresql/data
 
 volumes:
   pgdata:
-# docker compose --profile prod down && docker compose --profile prod up -d
-# docker logs -f django-prod
-# docker rm -f django-prod
+# docker compose --profile dev down && docker compose --profile dev up -d
+# docker logs -f django-dev
+# docker rm -f django-dev
